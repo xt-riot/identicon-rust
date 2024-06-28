@@ -1,26 +1,49 @@
-use base64::{engine::general_purpose::URL_SAFE, Engine as _};
-
+use image::{ImageBuffer, Rgb, RgbImage};
+use sha3::{Digest, Sha3_512};
 fn main() {
-    let input = String::from("konstantinos.karachristos");
+    let input = "";
+    let mut hasher = Sha3_512::new();
+    hasher.update(input.as_bytes());
 
-    let base64_representation: String = URL_SAFE.encode(input.as_bytes());
-    println!("{} / {}", base64_representation, input);
+    let hashed_input = &hasher.finalize();
 
-    let color = get_color(input);
-    println!("color: {:?}", color);
+    let color = get_color(hashed_input);
+
+    let img = get_image(hashed_input, color);
+    img.save("output.json").unwrap();
 }
 
-fn get_color(input: String) -> Color {
-    let input_as_u8 = input.as_bytes();
+fn get_image(input: &[u8], color: Color) -> RgbImage {
+    let mut img = RgbImage::new(10, 10);
+    let mut counter = 0;
+
+    for x in 0..5 {
+        for y in 0..10 {
+            img.save(format!("images/output{}{}.jpg", x, y)).unwrap();
+            if input[counter] % 2 == 0 {
+                img.put_pixel(x, y, Rgb([color.red, color.green, color.blue]));
+                img.put_pixel(9 - x, y, Rgb([color.red, color.green, color.blue]));
+            } else {
+                img.put_pixel(x, y, Rgb([0, 0, 0]));
+                img.put_pixel(9 - x, y, Rgb([0, 0, 0]));
+            }
+            counter += 1;
+        }
+    }
+
+    img
+}
+
+fn get_color(input: &[u8]) -> Color {
     Color {
-        red: input_as_u8[0],
-        green: input_as_u8[1],
-        blue: input_as_u8[2],
+        red: input[0],
+        green: input[1],
+        blue: input[2],
     }
 }
 
 #[derive(Debug)]
-struct Color {
+pub struct Color {
     red: u8,
     green: u8,
     blue: u8,
