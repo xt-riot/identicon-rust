@@ -7,44 +7,59 @@ fn main() {
 
     let hashed_input = &hasher.finalize();
 
-    let color = get_color(hashed_input);
+    let identicon: Box<dyn Identicon<u8>> = Box::new(Implementation);
 
-    let img = get_image(hashed_input, color);
-    img.save("output.json").unwrap();
+    let img = identicon.get_identicon(hashed_input);
+
+    img.save("output.jpg").unwrap();
 }
 
-fn get_image(input: &[u8], color: Color) -> RgbImage {
-    let mut img = RgbImage::new(10, 10);
-    let mut counter = 0;
-
-    for x in 0..5 {
-        for y in 0..10 {
-            img.save(format!("images/output{}{}.jpg", x, y)).unwrap();
-            if input[counter] % 2 == 0 {
-                img.put_pixel(x, y, Rgb([color.red, color.green, color.blue]));
-                img.put_pixel(9 - x, y, Rgb([color.red, color.green, color.blue]));
-            } else {
-                img.put_pixel(x, y, Rgb([0, 0, 0]));
-                img.put_pixel(9 - x, y, Rgb([0, 0, 0]));
-            }
-            counter += 1;
-        }
-    }
-
-    img
-}
-
-fn get_color(input: &[u8]) -> Color {
-    Color {
-        red: input[0],
-        green: input[1],
-        blue: input[2],
-    }
+trait Identicon<T> {
+    fn get_color(&self, input: &[T]) -> Color<T>;
+    fn get_image(&self, input: &[T], color: Color<T>) -> ImageBuffer<Rgb<u8>, Vec<u8>>;
+    fn get_identicon(&self, input: &[T]) -> ImageBuffer<Rgb<u8>, Vec<u8>>;
 }
 
 #[derive(Debug)]
-pub struct Color {
-    red: u8,
-    green: u8,
-    blue: u8,
+struct Color<T> {
+    pub red: T,
+    pub green: T,
+    pub blue: T,
+}
+
+struct Implementation;
+
+impl Identicon<u8> for Implementation {
+    fn get_color(&self, input: &[u8]) -> Color<u8> {
+        Color {
+            red: input[0],
+            green: input[1],
+            blue: input[2],
+        }
+    }
+
+    fn get_image(&self, input: &[u8], color: Color<u8>) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+        let mut img = RgbImage::new(10, 10);
+        let mut counter = 0;
+
+        for x in 0..5 {
+            for y in 0..10 {
+                if input[counter] % 2 == 0 {
+                    img.put_pixel(x, y, Rgb([color.red, color.green, color.blue]));
+                    img.put_pixel(9 - x, y, Rgb([color.red, color.green, color.blue]));
+                } else {
+                    img.put_pixel(x, y, Rgb([0, 0, 0]));
+                    img.put_pixel(9 - x, y, Rgb([0, 0, 0]));
+                }
+                counter += 1;
+            }
+        }
+
+        img
+    }
+
+    fn get_identicon(&self, input: &[u8]) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+        let color = self.get_color(input);
+        self.get_image(input, color)
+    }
 }
