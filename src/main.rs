@@ -1,7 +1,7 @@
 use image::{ImageBuffer, Rgb, RgbImage};
 use sha3::{Digest, Sha3_512};
 fn main() {
-    let input = "";
+    let input = "konstantinos.karachristos";
     let mut hasher = Sha3_512::new();
     hasher.update(input.as_bytes());
 
